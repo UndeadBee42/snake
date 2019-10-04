@@ -1,11 +1,189 @@
-<!DOCTYPE html>
 <html>
-<head>
-	<title>snake</title>
-</head>
-<body>
-<canvas id="canvas" width="250" height="250" tabindex='1'></canvas>
-<p>клик на квадрат ,а затем управление стрелочками</p>
-<script type="text/javascript" src="main.js"></script>
-</body>
+	<head>
+		<meta charset="UTF-8">
+		<title>Snake</title>
+		<style type="text/css">
+      		canvas { border: 1px solid black; }
+    	</style>
+	</head>
+	<body>
+	<canvas width="500" height="500" id="screen" tabIndex="1"></canvas>
+	<script type="text/javascript">
+		'use strict';
+		var canvas = document.getElementById("screen");
+		var ctx = canvas.getContext("2d");
+
+
+		function Snake()
+			{
+			const self = this;
+			self.colors = ["red","orange","yellow","green","aqua","blue","blueviolet"];
+			self.food = [10,10];
+			self.prop =
+				{
+				HeadDir:0,
+				/*
+				0 = Right
+				1 = Down
+				2 = Left
+				3 = Up
+				*/
+				speed:100,
+				/*milsec for 1 step*/
+				PrevStep:0
+				}
+			self.buffer = [0,0,0,0]
+			
+			self.Body = [12,12];
+			self.setFood = function()
+				{
+				self.food[0] = Math.round((Math.random()*100)%24);
+				self.food[1] = Math.round((Math.random()*100)%24);
+				}
+			self.dead = function()
+				{
+				for(var sl = self.Body.length; sl > 1;sl--)
+					{
+					self.Body.pop();
+					}
+				self.Body[0] = 12;
+				self.Body[1] = 12;
+				self.buffer[0] = self.Body[0];
+				self.buffer[1] = self.Body[1];
+				}
+			self.Up = function()
+				{
+				let aa = self.Body.push(self.Body[self.Body.length-2]);
+				aa = self.Body.push(self.Body[self.Body.length-3]);  
+				}
+			self.KeyEvent = function(event)
+				{
+							switch(event.code) {
+							case 'ArrowRight': 
+								if(self.prop.HeadDir == 2){}
+								else{self.prop.HeadDir = 0;}
+								break;
+							case 'ArrowDown':
+								if(self.prop.HeadDir == 3){}
+								else{self.prop.HeadDir = 1;}
+								break;
+							case 'ArrowLeft':
+								if(self.prop.HeadDir == 0){}
+								else{self.prop.HeadDir = 2;}
+								break;
+							case 'ArrowUp':
+								if(self.prop.HeadDir == 1){}
+								else{self.prop.HeadDir = 3;}
+								break;
+						
+								}
+					
+				}
+			self.move = function(myTime)
+				{
+				self.buffer[0] = self.Body[0];
+				self.buffer[1] = self.Body[1];
+				if(self.Body[2] != undefined)
+					{
+					self.buffer[2] = self.Body[2];
+					self.buffer[3] = self.Body[3];
+					}
+				if(myTime - self.prop.PrevStep > self.prop.speed)
+					{
+					self.prop.PrevStep = myTime;
+					
+					switch(self.prop.HeadDir)
+								{
+								case 0:
+								if(self.buffer[0]+1 > 24){self.buffer[0]=0;}
+								else{self.buffer[0] += 1;}
+								break;
+								case 1:
+								if(self.buffer[1]+1 > 24){self.buffer[1]=0;}
+								else{self.buffer[1] += 1;}
+								break;
+								case 2:
+								if(self.buffer[0]-1 < 0){self.buffer[0]=24;}
+								else{self.buffer[0] -= 1;}
+								break;
+								case 3:
+								if(self.buffer[1]-1 < 0){self.buffer[1]=24;}
+								else{self.buffer[1] -= 1;}
+								break;
+								}
+
+					for(var i = 0; i < self.Body.length;i+=2)
+						{
+						self.buffer[2] = self.Body[i];
+						self.buffer[3] = self.Body[i+1];
+
+						self.Body[i] = self.buffer[0];
+						self.Body[i+1] = self.buffer[1];
+
+						self.buffer[0] = self.buffer[2];
+						self.buffer[1] = self.buffer[3];
+						}
+					}
+				if(self.Body[0]==self.food[0] && self.Body[1]==self.food[1])
+					{
+					self.Up();
+					self.setFood();
+					}
+				for(var i = 2; i < self.Body.length;i+=2)
+					{
+					if(self.Body[0] == self.Body[i] && self.Body[1] == self.Body[i+1])
+						{self.dead();}
+					}
+				};
+			return this;
+			}
+		
+		const snake = new Snake;
+		snake;
+		document.getElementById('screen').addEventListener('keydown', snake.KeyEvent);
+		
+		function GameLogic(snake)
+			{
+			const myDate = new Date();
+  			let myTime = myDate.getTime();
+  			snake.move(myTime);
+
+  			
+			}
+		function Draw(snake)
+			{
+			
+			for(var i = (snake.Body.length);i>=0;i-=2)
+				{
+				ctx.beginPath();
+				ctx.fillStyle = snake.colors[(i/2)%7];
+				ctx.moveTo(snake.Body[i]*20+10,snake.Body[i+1]*20+10);
+				ctx.arc(snake.Body[i]*20+10,
+    					snake.Body[i+1]*20+10, 
+    					10, 0, Math.PI * 2, true);
+				ctx.fill();
+				}
+			
+    		ctx.beginPath();
+    		ctx.fillStyle = snake.colors[(snake.Body.length/2)%7];
+    		ctx.arc(snake.food[0]*20+10,
+    					snake.food[1]*20+10, 
+    					10, 0, Math.PI * 2, true);
+    		ctx.moveTo(snake.food[0],snake.food[1]);
+    		ctx.fill();
+			}
+
+		var MainCycle = window.setInterval(function()
+			{
+			/*Clean screen*/
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			GameLogic(snake);
+			Draw(snake);
+
+			}, 17); /* 17 milsec ~ 60 fps*/
+		
+		
+
+	</script>
+	</body>
 </html>
