@@ -18,7 +18,7 @@
 			{
 			const self = this;
 			self.colors = ["red","orange","yellow","green","aqua","blue","blueviolet"];
-			self.food = [10,10];
+			self.food = [-10,-10];
 			self.prop =
 				{
 				HeadDir:0,
@@ -140,6 +140,7 @@
 		
 		const snake = new Snake;
 		snake;
+		snake.setFood();
 		document.getElementById('screen').addEventListener('keydown', snake.KeyEvent);
 		
 		function GameLogic(snake)
